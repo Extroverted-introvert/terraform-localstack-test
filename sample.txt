@@ -1,1 +1,10 @@
-curl -X POST -H "Content-Type: application/json" -d '{"number1": 3, "number2": 6}' http://localhost:4566/restapis/ryuiy7pxru/local/_user_request_/sum/
+Reference:
+https://qiita.com/yasomaru/items/fa708a1f21a79e637868
+
+curl -X POST -H "Content-Type: application/json" -d '{"number1": 3, "number2": 6}' http://localhost:4566/restapis/i14sysaxzb/local/_user_request_/sum/
+
+awslocal lambda invoke --function-name sum_lambda2 \
+    --cli-binary-format raw-in-base64-out \
+    --payload '{"body": "{\"number1\": \"10\", \"number2\": \"10\"}" }' output.txt
+
+awslocal --region us-east-1 logs get-log-events --log-group-name /aws/lambda/sum_lambda2 --log-stream-name 2024/01/18/[\$LATEST]42c43f9e93e2f01431e4c2ec467047f2

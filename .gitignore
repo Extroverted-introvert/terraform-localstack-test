@@ -1,1 +1,3 @@
 hashicorp/
+volume/
+*.zip

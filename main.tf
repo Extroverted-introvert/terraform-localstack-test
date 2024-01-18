@@ -8,15 +8,18 @@ data "archive_file" "lambda_code" {
   output_path = "lambda_code/lambda_code.zip"
 }
 
-resource "aws_lambda_function" "sum_function" {
-  function_name = "sum_lambda"
-  handler       = "lambda_function.handler"
-  runtime       = "python3.8"
-  filename      = "lambda_code/lambda_code.zip"  # Change to the actual path of your Lambda function code
-  source_code_hash  = data.archive_file.lambda_code.output_base64sha256 # Change to the actual path of your Lambda function code
-  role          = aws_iam_role.lambda_execution_role.arn
-  timeout       = 10
-}
+# data "archive_file" "lambda_layer_code" {
+#   type        = "zip"
+#   output_path = "lambda_code/numpy_layer.zip"
+# }
+
+# resource "aws_lambda_layer_version" "python_layer" {
+#   layer_name = "numpy_layer"
+#   compatible_runtimes = ["python3.8"]
+#   filename = "lambda_layer/numpy_layer.zip"
+#   source_code_hash  = filebase64("lambda_layer/numpy_layer.zip")  # Replace with the path to your layer ZIP file
+# }
+
 
 resource "aws_iam_role" "lambda_execution_role" {
   name = "lambda_execution_role"
@@ -33,6 +36,51 @@ resource "aws_iam_role" "lambda_execution_role" {
       },
     ],
   })
+}
+
+resource "aws_iam_policy" "lambda_execution_policy" {
+  name        = "LambdaExecutionPolicy"
+  description = "Policy for Lambda execution with CloudWatch Logs access"
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Action = [
+          "logs:CreateLogGroup",
+          "logs:CreateLogStream",
+          "logs:PutLogEvents",
+        ],
+        Effect   = "Allow",
+        Resource = "*",
+      },
+    ],
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "lambda_execution_attachment" {
+  policy_arn = aws_iam_policy.lambda_execution_policy.arn
+  role       = aws_iam_role.lambda_execution_role.name
+}
+
+resource "aws_cloudwatch_log_group" "lambda_log_group" {
+  name              = "/aws/lambda/sum_lambda2"
+  retention_in_days = 7
+  lifecycle {
+    prevent_destroy = false
+  }
+}
+
+resource "aws_lambda_function" "sum_function" {
+  function_name = "sum_lambda2"
+  handler       = "lambda_function.handler"
+  runtime       = "python3.8"
+  filename      = "lambda_code/lambda_code.zip"  # Change to the actual path of your Lambda function code
+  source_code_hash  = data.archive_file.lambda_code.output_base64sha256 # Change to the actual path of your Lambda function code
+  role          = aws_iam_role.lambda_execution_role.arn
+  timeout       = 100
+  depends_on    = [aws_cloudwatch_log_group.lambda_log_group]
+  # layers = [aws_lambda_layer_version.python_layer.arn]  Not supported in community version
 }
 
 resource "aws_api_gateway_rest_api" "my_api" {

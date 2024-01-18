@@ -1,0 +1,1 @@
+{"statusCode": 200, "body": "{\"result\": \"1010\"}"}
