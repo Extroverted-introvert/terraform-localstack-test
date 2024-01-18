@@ -1,0 +1,1 @@
+curl -X POST -H "Content-Type: application/json" -d '{"number1": 3, "number2": 6}' http://localhost:4566/restapis/ryuiy7pxru/local/_user_request_/sum/
